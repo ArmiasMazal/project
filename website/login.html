@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="style_login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-side">
+            <h1>Let's find your dream job NOW!</h1>
+            <p>Check out the jobs in your area.</p>
+            <p>Click below to view business info.</p>
+        </div>
+        <div class="right-side">
+            <h2>Login</h2>
+            <form action="/login" method="post">
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div>
+                    <button type="submit">Login</button>
+                </div>
+                <div class="login-options">
+                    <a href="forgot.html">Forgot your password?</a> | <a href="sign.html">Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
