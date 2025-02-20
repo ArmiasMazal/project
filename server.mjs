@@ -115,8 +115,11 @@ app.post('/login', (req, res) => {
       }
       if (isMatch) {
         // סיסמה נכונה, התחברות מוצלחת
-        res.send(`Welcome, ${user.name}!`);
-        // כאן תוכלי להפנות לעמוד נוסף או לנהל סשן
+        if (user.role === 'employer') {
+          res.redirect('/employer.html');
+        } else {
+          res.redirect('/jobseeker.html');
+        }
       } else {
         res.status(400).send('Incorrect password');
       }
