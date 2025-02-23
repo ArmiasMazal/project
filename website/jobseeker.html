@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Seeker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator/dist/leaflet.polylineDecorator.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style_jobseeker.css">
+</head>
+<body onload="rangeTicks()">
+    <div class="container">
+        <div class="row text-center mb-2">
+            <h4>Let's find your dream job NOW!</h4>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="row mb-3">
+                    <ul id="jobsList" class="list-group"></ul>
+                </div>
+                <div class="row">
+                    <div class="card">
+                chosen job details:
+                    <div class="card-body" id="jobDetails"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div id="map" style="width:100%;height: 450px;"></div>
+                    <label for="distanceChange" class="form-label">Radius:</label>
+                    <div class="slider-container">
+                        <input type="range" class="form-range" id="distanceChange" step="1" min="7" max="15" onchange="initializeMap(this.value)">
+                        <div class="ticks" id="ticks"></div>
+                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="row mb-3">
+                    <input id="address" type="text" class="form-control" placeholder="Type address"/>
+                    <button class="mt-2" onclick="submitLocation()">search by submitted address</button>
+                </div>
+                <p class="col-md-4">OR</p>
+                <div class="row mb-3">
+                    <button class="mt-2" onclick="shareLocation()">search by your current location</button>
+                </div>
+                <div class="row">
+                    <p>Filters:</p>
+                    <div class="filter-item mb-3">
+                        <label for="salary">Minimum salary per hour:</label>
+                        <input type="number" id="salary" name="payMin" class="form-control" min="0" placeholder="₪ per hour">
+                    </div>
+                    <div class="filter-item mb-3">
+                        <label for="date">Posted after date:</label>
+                        <input type="date" id="date" name="datePosted" class="form-control">
+                    </div>
+                    <div class="filter-item mb-3">
+                        <label for="type">Job type:</label>
+                        <select id="type" name="jobType" class="form-select">
+                            <option value="" selected>Any Type</option>
+                            <option value="part time">Part Time</option>
+                            <option value="full time">Full Time</option>
+                        </select>
+                    </div>
+                        <button class="mt-0" onclick="initializeMap()">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script defer src="script_jobseeker.js"></script>
+</body>
+</html>

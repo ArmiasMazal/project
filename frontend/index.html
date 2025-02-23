@@ -2,14 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Board</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-polylinedecorator/dist/leaflet.polylineDecorator.js"></script>
-    <script defer src="script.js"></script>
+    <title>Home Page</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body onload="initializeMap()">
-    <div id="map" style="height: 500px;"></div>
+<body>
+    <div class="container">
+        <div class="left-side">
+            <h1>Welcome To The GIS Job Board!</h1>
+        </div>
+        <div class="right-side">
+            <div>
+                <button onclick="window.location.href='../website/login.html';">Login</button>           
+             </div>
+            <div>
+                <button onclick="window.location.href='../website/sign.html';">Sign Up</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
