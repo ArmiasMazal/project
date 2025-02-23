@@ -2,10 +2,10 @@ let mapRef = null;
 let markers = [];
 let selectedLocation = { latitude: "31.5", longitude: "35" };
 let jobsData = [
-    { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025" },
-    { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025"},
-    { id:"2",location: "32.31353217383461, 34.84667905081852", description: "מחפשים קונדיטור/ית לצוות, למשרה מלאה בואו להצטרף לצוות המלון !!",type:"full time", wage:"50", publicationDate:"01/01/2025" },
-    { id:"1",location: "31.662033197806444, 34.55998114149099", description: "מחפשים אח/ות למחלקת יולדות, למשרה מלאה.דרוש/ה אח/ות עם ניסיון והמלצות!!",type:"full time", wage:"40", publicationDate:"01/11/2024" }
+    { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025",emplpoyerID:"1" },
+    { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025",emplpoyerID:"1" },
+    { id:"2",location: "32.31353217383461, 34.84667905081852", description: "מחפשים קונדיטור/ית לצוות, למשרה מלאה בואו להצטרף לצוות המלון !!",type:"full time", wage:"50", publicationDate:"01/01/2025",emplpoyerID:"2" },
+    { id:"1",location: "31.662033197806444, 34.55998114149099", description: "מחפשים אח/ות למחלקת יולדות, למשרה מלאה.דרוש/ה אח/ות עם ניסיון והמלצות!!",type:"full time", wage:"40", publicationDate:"01/11/2024",emplpoyerID:"3" }
 ];
 let jobsAfterFilter=[];
 const zoomLevels = [
@@ -82,13 +82,16 @@ function rangeTicks(){
     }
 }
 function jobsList(job,lat,long){
-    let list=document.getElementById("jobsList");
+    let list = document.getElementById("jobsList");
     let listItem = document.createElement("li");
-    listItem.classList.add("list-group-item", "list-group-item-action");
-    listItem.addEventListener("click", function() {showJob(job.id);});
-    listItem.id=job.id;
-    listItem.innerHTML=job.description+" ("+locationsDistance(lat,long).toFixed(2)+" KM)";
+    listItem.classList.add("list-group-item", "list-group-item-action", "mb-1");
+    listItem.style.padding = "5px"; // Adjust padding to make the item smaller
+    listItem.style.fontSize = "12px"; // Adjust font size to make the text smaller
+    listItem.addEventListener("click", function() { showJob(job.id); });
+    listItem.id = job.id;
+    listItem.innerHTML = job.description + " (" + locationsDistance(lat, long).toFixed(2) + " KM)";
     list.append(listItem);
+
 }
 function removeAllChildNodes(parent) {
     while (parent.firstChild) {
@@ -246,6 +249,7 @@ async function forwardGeocode(address) {
             if (data.length > 0) {
                 return { lat: data[0].lat, lon: data[0].lon };
             } else {
+                alert("Address Not Recognized!")
                 throw new Error("No results found");
             }
         } else {
@@ -256,6 +260,27 @@ async function forwardGeocode(address) {
         throw new Error('An error occurred');
     }
 }
+async function getStations(location) {
+    let fixedLoc = location.replace(/\s+/g, ''); 
+    const apiKey = 'iK36yK63sjpS1Dcs0qf0bhSOBGiekuIhH81ERyUEvYY';
+    const url = `https://transit.hereapi.com/v8/stations?in=${fixedLoc};r=1000000&apiKey=${apiKey}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.stations && data.stations.length > 0) {
+            return data.stations;
+        } else {
+            throw new Error("No results found");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        throw new Error('An error occurred while fetching stations');
+    }
+}
+
 function showJob(id){
     
     let job = jobsAfterFilter.find(job => job.id === id);
@@ -268,14 +293,23 @@ function showJob(id){
         console.error('Element jobDetails not found.');
         return;
     }
-    if(document.getElementById(job.id)){
-        document.getElementById(job.id).classList.add("disabled")
-    }
+    jobsAfterFilter.forEach(job => {
+        if(job.id==id){
+            document.getElementById(job.id).classList.add("active");
+        }
+        else{
+            document.getElementById(job.id).classList.remove("active");        }
+    });
     removeAllChildNodes(details);
     let jobDescription = document.createElement("h5");
     jobDescription.classList.add("card-text");
     jobDescription.innerHTML = job.description;
     details.append(jobDescription);
+    let jobApply = document.createElement("button");
+    jobApply.classList.add("mt-0","mb-2");
+    jobApply.innerHTML ="Apply to the job";
+    jobApply.addEventListener("click", function() { apply(job.id,1); });
+    details.append(jobApply);
     let jobDate = document.createElement("h6");
     jobDate.classList.add("card-subtitle", "mb-2", "text-body-secondary");
     jobDate.innerHTML = `Published: ${job.publicationDate}`;
@@ -288,9 +322,32 @@ function showJob(id){
     jobType.classList.add("card-subtitle", "mb-2", "text-body-secondary");
     jobType.innerHTML = job.type;
     details.append(jobType);
-   
+    (async () => {
+        try {
+            let stations = await getStations(job.location);
+            if (stations) {
+                stations.forEach(station => {
+                    let jobStation = document.createElement("p");
+                    jobStation.classList.add("card-subtitle", "mb-1", "text-body-secondary");
+                    jobStation.innerHTML = "🚍 " + station.place.name;
+                    details.append(jobStation);
+                });
+            }
+        } catch (error) {
+            console.error(error.message);
+        }
+    })();
+    
 }
-
+function apply(jobId,userId){
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}/${mm}/${yyyy}`;
+    let newApplication= { jobId:jobId,userId:userId,date:formattedDate };
+    console.log(newApplication);
+}
 function shareLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition, showError);

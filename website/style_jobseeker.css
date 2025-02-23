@@ -49,7 +49,7 @@ label {
     margin-bottom: 5px;
 }
 button {
-    padding: 10px 20px;
+    padding: 4px 14px;
     background-color: black;
     color: white;
     border: none;
@@ -60,6 +60,11 @@ button {
   button:hover {
     background-color: #333;
   }
+  .scrollable-list {
+    max-height: 260px; 
+    overflow-y: auto;
+}
+
   input[type=range]#distanceChange {
     -webkit-appearance: none; /* Remove default styling */
     width: 100%;
@@ -84,5 +89,10 @@ button {
     height: 20px; /* Adjust thumb height */
     background: orange; /* Thumb color */
     cursor: pointer;
+  }
+  .active {
+    background-color: orange !important;
+    border-color: orange !important;
+    color: white; 
   }
   

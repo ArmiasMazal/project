@@ -1,0 +1,52 @@
+
+.form-range {
+    width: 100%;
+}
+
+.label {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+
+.filter-container {
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+.filter-item {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+button {
+    padding: 4px 14px;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+button:hover {
+  background-color: #333;
+}
+.scrollable-list {
+  max-height: 260px; 
+  overflow-y: auto;
+}
+.scrollable-long-list{
+  max-height: 500px; 
+  overflow-y: auto;
+}
+.active {
+  background-color: orange !important;
+  border-color: orange !important;
+  color: white; 
+}
+
+  
