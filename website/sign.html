@@ -4,13 +4,33 @@
     <meta charset="UTF-8">
     <title>Sign Up</title>
     <link rel="stylesheet" href="style_sign.css">
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <!-- Firebase Authentication SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+    <!-- Firebase Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <!-- Initialize Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCidslFzlkdpTIlmuTyJTd9dA_yMcbc4zE",
+            authDomain: "gis-project-64b97.firebaseapp.com",
+            projectId: "gis-project-64b97",
+            storageBucket: "gis-project-64b97.firebaseapp.com",
+            messagingSenderId: "1060348225169",
+            appId: "1:1060348225169:web:c2594ebc16c42651ff4130"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <div class="sign-up-page">
             <h2>Create New Account</h2>
             <p>Already registered? <a href="login.html">Login</a></p>
-            <form action="/sign-up" method="post">
+            <form id="sign-up-form">
                 <div>
                     <label for="name">Name:</label>
                     <input type="text" id="name" name="name" required>
@@ -40,6 +60,7 @@
             </form>
         </div>
     </div>
+    <!-- Add Firebase functionality -->
+    <script src="signup.js"></script>
 </body>
 </html>
-

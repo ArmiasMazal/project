@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <title>Login Page</title>
     <link rel="stylesheet" href="style_login.css">
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <!-- Firebase Authentication SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+    <!-- Firebase Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <!-- Initialize Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCidslFzlkdpTIlmuTyJTd9dA_yMcbc4zE",
+            authDomain: "gis-project-64b97.firebaseapp.com",
+            projectId: "gis-project-64b97",
+            storageBucket: "gis-project-64b97.firebaseapp.com",
+            messagingSenderId: "1060348225169",
+            appId: "1:1060348225169:web:c2594ebc16c42651ff4130"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -14,7 +34,7 @@
         </div>
         <div class="right-side">
             <h2>Login</h2>
-            <form action="/login" method="post">
+            <form id="login-form">
                 <div>
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required>
@@ -32,5 +52,7 @@
             </form>
         </div>
     </div>
+    <!-- Add Firebase functionality -->
+    <script src="login.js"></script>
 </body>
 </html>
