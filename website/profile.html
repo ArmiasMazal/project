@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="style_profile.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        if (!firebase.apps.length) {
+            const firebaseConfig = {
+                apiKey: "AIzaSyCidslFzlkdpTIlmuTyJTd9dA_yMcbc4zE",
+                authDomain: "gis-project-64b97.firebaseapp.com",
+                projectId: "gis-project-64b97",
+                storageBucket: "gis-project-64b97.firebaseapp.com",
+                messagingSenderId: "1060348225169",
+                appId: "1:1060348225169:web:c2594ebc16c42651ff4130"
+            };
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+    </script>
+</head>
+<body onload="fetchUsersFromFirebase()">
+    <div class="container">
+        <div class="profile-page">
+            <h2>Edit Your Profile</h2>
+            <form id="profile-form">
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name">
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <div>
+                    <label for="phone">Phone:</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password">
+                </div>
+                <div>
+                    <button type="submit">Edit Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="profile.js"></script>
+</body>
+</html>
