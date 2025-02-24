@@ -1,6 +1,7 @@
+
 let mapRef = null;
 let markers = [];
-let selectedLocation = { latitude: "31.5", longitude: "35" };
+let selectedLocation = { latitude: 32.0153, longitude: 34.7874 }; // HIT Holon
 let jobsData = [
     { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025",employerID:"1" },
     { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025",employerID:"1" },
@@ -56,27 +57,60 @@ function filterById(id=1){
     filterJobs(id);
     filterApps(id);
 }
-function submitJob(){
+
+function submitJob() {
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
     const mm = String(today.getMonth() + 1).padStart(2, '0'); 
     const yyyy = today.getFullYear();
     const formattedDate = `${dd}/${mm}/${yyyy}`;
-    if(document.getElementById("description").value&&document.getElementById("description").value&&document.getElementById("salary").value){
-        let newJob={
-            location:selectedLocation.latitude+", "+selectedLocation.longitude,
+    
+    if (document.getElementById("description").value && document.getElementById("salary").value) {
+        let newJob = {
+            location: `${selectedLocation.latitude}, ${selectedLocation.longitude}`,
             description: document.getElementById("description").value,
-            type:document.getElementById("type").value, 
-            wage:document.getElementById("salary").value, 
-            publicationDate:formattedDate,
-            employerID:"1" };
-        console.log(newJob);
-    }
-    else{
-        alert("fill in all the job details");
-    }
+            type: document.getElementById("type").value, 
+            wage: document.getElementById("salary").value, 
+            publicationDate: formattedDate,
+            employerID: "1"
+        };
 
+        db.collection("jobs").add(newJob)
+        .then((docRef) => {
+            console.log("Job added with ID: ", docRef.id);
+            showSuccessPopup("Job added successfully!");
+        })
+        .catch((error) => {
+            console.error("Error adding job: ", error);
+            showErrorPopup("Failed to add job. Please try again.");
+        });
+    } else {
+        alert("Please fill in all the job details.");
+    }
 }
+
+function showSuccessPopup(message) {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-success");
+    popup.innerText = message;
+    document.body.appendChild(popup);
+
+    setTimeout(() => {
+        popup.remove();
+    }, 3000);
+}
+
+function showErrorPopup(message) {
+    const popup = document.createElement("div");
+    popup.classList.add("popup-error");
+    popup.innerText = message;
+    document.body.appendChild(popup);
+
+    setTimeout(() => {
+        popup.remove();
+    }, 3000);
+}
+
 function editJob(jobId){
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
@@ -176,7 +210,8 @@ const BusinessesIcon = L.divIcon({
     iconAnchor: [30, 30],
     popupAnchor: [0, -30],
 });
-function initializeMap(zoom =15) {
+
+function initializeMap(zoom = 15) {
     if (mapRef) {
         mapRef.setView([selectedLocation.latitude, selectedLocation.longitude], zoom);
     } else {
@@ -184,9 +219,17 @@ function initializeMap(zoom =15) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapRef);
+
+        // Add click event to map
+        mapRef.on('click', function(e) {
+            selectedLocation.latitude = e.latlng.lat;
+            selectedLocation.longitude = e.latlng.lng;
+            groupAndAddMarkers();
+        });
     }
     groupAndAddMarkers(); 
 }
+
 function removeAllChildNodes(parent) {
     while (parent.firstChild) {
       parent.removeChild(parent.firstChild);
@@ -218,14 +261,22 @@ function filterJobs(employerID) {
 }
 
 function groupAndAddMarkers() {
+    // ננקה את הסמנים הישנים
+    markers.forEach(marker => marker.remove());
+    markers = [];
+
+    // נוסיף את המיקום הנבחר
     let groupedLocations = {};
     const selectedKey = `${selectedLocation.latitude},${selectedLocation.longitude}`;
     if (!groupedLocations[selectedKey]) {
         groupedLocations[selectedKey] = { items: [], icon: BusinessesIcon };
     }
-    groupedLocations[selectedKey].items.push({ description: "chosen location",id:"" });
+    groupedLocations[selectedKey].items.push({ description: "chosen location", id: "" });
+
+    // נוסיף את הסמנים החדשים למפה
     addMarkersToMap(groupedLocations);
 }
+
 function addMarkersToMap(groupedLocations) {
     markers.forEach(marker => marker.remove());
     markers = [];
@@ -302,6 +353,13 @@ function showPosition(position) {
     initializeMap();
 
 }
+
+mapRef.on('click', function(e) {
+    selectedLocation.latitude = e.latlng.lat;
+    selectedLocation.longitude = e.latlng.lng;
+    groupAndAddMarkers();
+});
+
 function showError(error) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
@@ -318,3 +376,5 @@ function showError(error) {
             break;
     }
 }
+
+

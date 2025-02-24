@@ -1,6 +1,6 @@
 let mapRef = null;
+let selectedLocation = { latitude: 32.0153, longitude: 34.7874 }; // HIT Holon
 let markers = [];
-let selectedLocation = { latitude: "31.5", longitude: "35" };
 let jobsData = [
     { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025",emplpoyerID:"1" },
     { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025",emplpoyerID:"1" },
@@ -58,29 +58,43 @@ function getZoomLevel(num) {
     }
 }
 
-function rangeTicks(){
+function rangeTicks() {
     const slider = document.getElementById('distanceChange');
     const ticks = document.getElementById('ticks');
-    const min = parseInt(slider.min);
-    const max = parseInt(slider.max);
     const step = parseInt(slider.step);
-    let j=0;
-    for (let i = min; i <= max; i += step) {
+    
+    // Clear previous ticks
+    while (ticks.firstChild) {
+        ticks.removeChild(ticks.firstChild);
+    }
+
+    for (let i = parseInt(slider.min); i <= parseInt(slider.max); i += step) {
         const tick = document.createElement('div');
         tick.classList.add('tick');
-
+        tick.setAttribute('data-zoom', i);
+        
         const line = document.createElement('div');
         line.classList.add('line');
         tick.appendChild(line);
-
+        
         const label = document.createElement('div');
         label.classList.add('label');
-        label.innerText = zoomLevels[j].distanceKm.toFixed(0)+" KM";
+        label.innerText = zoomLevels[i - parseInt(slider.min)].distanceKm.toFixed(0) + " KM";
         tick.appendChild(label);
         ticks.appendChild(tick);
-        j++;
+        
+        tick.addEventListener('click', function() {
+            slider.value = i;
+            initializeMap(i);
+        });
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+    rangeTicks();
+});
+
 function jobsList(job,lat,long){
     let list = document.getElementById("jobsList");
     let listItem = document.createElement("li");
@@ -112,26 +126,26 @@ function locationsDistance(lat, lon) {
  
    return R * c;
 }
+
 const BusinessesIcon = L.divIcon({
     className: "custom-icon",
     html: `
       <div style="
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: black; 
         font-size: 22px;
       ">
         🏬
       </div>
     `,
-    iconSize: [60, 60],
-    iconAnchor: [30, 30],
-    popupAnchor: [0, -30],
+    iconSize: [22, 22], // שינוי בגודל האייקון
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -11],
 });
+
+
 
 const selectedLocationIcon = L.divIcon({
     className: "custom-icon",
@@ -154,9 +168,7 @@ const selectedLocationIcon = L.divIcon({
     popupAnchor: [0, -30],
 });
 
-function initializeMap(zoom = 7) {
-    zoom=document.getElementById("distanceChange").value;
-    //console.log("Showing around: " + selectedLocation.latitude + ", " + selectedLocation.longitude);
+function initializeMap(zoom = 10) {
     if (mapRef) {
         mapRef.setView([selectedLocation.latitude, selectedLocation.longitude], zoom);
     } else {
@@ -164,9 +176,16 @@ function initializeMap(zoom = 7) {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapRef);
+
+        mapRef.on('zoomend', function() {
+            const currentZoom = mapRef.getZoom();
+            document.getElementById('distanceChange').value = currentZoom;
+            updateSliderLabel(currentZoom);
+            filterJobs(); // Update the job list based on the current zoom level
+        });
     }
     filterJobs();
-    groupAndAddMarkers(); 
+    groupAndAddMarkers();
 }
 
 function groupAndAddMarkers() {
@@ -188,10 +207,11 @@ function groupAndAddMarkers() {
     if (!groupedLocations[selectedKey]) {
         groupedLocations[selectedKey] = { items: [], icon: selectedLocationIcon };
     }
-    groupedLocations[selectedKey].items.push({ description: "chosen location",id:"" });
+    groupedLocations[selectedKey].items.push({ description: "chosen location", id: "" });
 
     addMarkersToMap(groupedLocations);
 }
+
 
 function addMarkersToMap(groupedLocations) {
     markers.forEach(marker => marker.remove());
@@ -212,6 +232,8 @@ function addMarkersToMap(groupedLocations) {
     }
 }
 
+
+
 function generatePopupContent(items) {
     return `
         <div>
@@ -224,6 +246,7 @@ function generatePopupContent(items) {
                   </div>
     `;
 }
+
 
 function submitLocation() {
     const address = document.getElementById("address").value;
@@ -280,6 +303,20 @@ async function getStations(location) {
         throw new Error('An error occurred while fetching stations');
     }
 }
+
+async function fetchJobsFromFirebase() {
+    try {
+        const snapshot = await db.collection("jobs").get();
+        jobsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        filterJobs();
+    } catch (error) {
+        console.error("Error fetching jobs from Firebase:", error);
+    }
+}
+
 
 function showJob(id){
     
@@ -361,6 +398,25 @@ function showPosition(position) {
     selectedLocation.longitude = position.coords.longitude;
     initializeMap();
 
+}
+
+function updateSliderLabel(currentZoom) {
+    const slider = document.getElementById('distanceChange');
+    const ticks = document.getElementById('ticks').children;
+
+    slider.value = currentZoom;
+
+    for (let i = 0; i < ticks.length; i++) {
+        const tick = ticks[i];
+        const label = tick.querySelector('.label');
+        if (parseInt(tick.getAttribute('data-zoom')) === currentZoom) {
+            tick.classList.add('active-tick');
+            label.style.fontWeight = 'bold';
+        } else {
+            tick.classList.remove('active-tick');
+            label.style.fontWeight = 'normal';
+        }
+    }
 }
 
 function showError(error) {
