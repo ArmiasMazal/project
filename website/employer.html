@@ -17,13 +17,12 @@
 
     <!-- Initialize Firebase -->
     <script>
-        // Initialize Firebase רק אם לא קיימת כבר אפליקציה מוגדרת
         if (!firebase.apps.length) {
             const firebaseConfig = {
                 apiKey: "AIzaSyCidslFzlkdpTIlmuTyJTd9dA_yMcbc4zE",
                 authDomain: "gis-project-64b97.firebaseapp.com",
                 projectId: "gis-project-64b97",
-                storageBucket: "gis-project-64b97.firebaseapp.com",
+                storageBucket: "gis-project-64b97.appspot.com",
                 messagingSenderId: "1060348225169",
                 appId: "1:1060348225169:web:c2594ebc16c42651ff4130"
             };
@@ -33,7 +32,7 @@
         const db = firebase.firestore();
     </script>
 </head>
-<body onload="initializeMap(); filterById()">
+<body onload="initializeMap();">
     <div class="container">
         <div class="row mb-6 justify-content-center">
             <h4 class="col text-center mt-1">Let's find your employees NOW!</h4>
@@ -50,6 +49,7 @@
                 <div class="row mb-2">
                     <ul id="applicationsList" class="list-group scrollable-long-list"></ul>
                 </div>
+                <ul id="jobApplicantsList" class="list-group scrollable-long-list"></ul> <!-- הסרת הכותרת הנוספת -->
             </div>
             <div class="col-md-4 text-center">
                 <div id="map" style="width:100%;height: 450px;"></div>
@@ -97,7 +97,17 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row mt-3"> <!-- הקטנת הרווח העליון -->
+            <div class="col-md-12">
+                <h4 class="text-center">Your Jobs:</h4>
+                <ul id="employerJobsList" class="list-group scrollable-long-list"></ul>
+            </div>
+        </div>
     </div>
     <script defer src="script_employer.js"></script>
 </body>
 </html>
+
+
+

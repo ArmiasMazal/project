@@ -15,7 +15,7 @@
                 apiKey: "AIzaSyCidslFzlkdpTIlmuTyJTd9dA_yMcbc4zE",
                 authDomain: "gis-project-64b97.firebaseapp.com",
                 projectId: "gis-project-64b97",
-                storageBucket: "gis-project-64b97.firebaseapp.com",
+                storageBucket: "gis-project-64b97.appspot.com",
                 messagingSenderId: "1060348225169",
                 appId: "1:1060348225169:web:c2594ebc16c42651ff4130"
             };
@@ -24,29 +24,37 @@
         const db = firebase.firestore();
     </script>
 </head>
-<body onload="fetchUsersFromFirebase()">
+<body onload="fetchUserFromFirebase()">
     <div class="container">
+        <div class="top-buttons">
+            <button class="back-btn" id="back-btn">BACK TO WEBSITE</button>
+        </div>
         <div class="profile-page">
-            <h2>Edit Your Profile</h2>
+            <h2>Your Profile</h2>
             <form id="profile-form">
                 <div>
                     <label for="name">Name:</label>
-                    <input type="text" id="name" name="name">
+                    <input type="text" id="name" name="name" readonly>
+                    <button type="button" class="edit-btn" id="edit-name">Edit</button>
                 </div>
                 <div>
                     <label for="email">Email:</label>
-                    <input type="email" id="email" name="email">
+                    <input type="email" id="email" name="email" readonly>
+                    <button type="button" class="edit-btn" id="edit-email">Edit</button>
                 </div>
                 <div>
                     <label for="phone">Phone:</label>
-                    <input type="tel" id="phone" name="phone">
+                    <input type="tel" id="phone" name="phone" readonly>
+                    <button type="button" class="edit-btn" id="edit-phone">Edit</button>
                 </div>
                 <div>
                     <label for="password">Password:</label>
-                    <input type="password" id="password" name="password">
+                    <input type="password" id="password" name="password" readonly>
+                    <button type="button" class="edit-btn" id="edit-password">Edit</button>
                 </div>
                 <div>
-                    <button type="submit">Edit Profile</button>
+                    <button type="submit" class="save-btn" id="save-btn">Save</button>
+                    <button type="button" class="cancel-btn" id="cancel-btn">Cancel</button>
                 </div>
             </form>
         </div>
