@@ -48,6 +48,36 @@ function filterJobs() {
 
 }
 
+function loadUserApplications() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error("No user is signed in.");
+        return;
+    }
+
+    const userId = user.uid;
+
+    db.collection("applications")
+        .where("userId", "==", userId)
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const application = doc.data();
+                markJobAsApplied(application.jobId);
+            });
+        })
+        .catch((error) => {
+            console.error("Error loading user applications: ", error);
+        });
+}
+
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        loadUserApplications(); // קריאת הבקשות של המשתמש
+    }
+});
+
+
 function getZoomLevel(num) {
     let res = zoomLevels.find(item => item.zoomLevel === num);
     if (res) {
@@ -307,15 +337,24 @@ async function getStations(location) {
 async function fetchJobsFromFirebase() {
     try {
         const snapshot = await db.collection("jobs").get();
-        jobsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        jobsData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            console.log("Fetched job data:", data); // בקרת אש: מידע המשרה שנשלף
+            return {
+                id: doc.id,
+                ...data,
+                employerID: data.employerID // ווידוא ששדה employerID נשמר
+            };
+        });
+
+        console.log("Jobs data after fetching from Firebase:", jobsData); // בקרת אש: מידע המשרות לאחר השליפה
+
         filterJobs();
     } catch (error) {
         console.error("Error fetching jobs from Firebase:", error);
     }
 }
+
 
 
 function showJob(id){
@@ -376,22 +415,57 @@ function showJob(id){
     })();
     
 }
-function apply(jobId,userId){
+
+function apply(jobId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error("No user is signed in.");
+        alert("Please sign in to apply for jobs.");
+        return;
+    }
+
+    const userId = user.uid;  // קבלת ה-ID של המשתמש המחובר
+    const job = jobsData.find(job => job.id === jobId);
+    if (!job) {
+        console.error("Job not found.");
+        return;
+    }
+
+    console.log("Job information before applying:", job); // בקרת אש: מידע המשרה לפני הגשת הבקשה
+
+    const employerID = job.employerID;
+    if (!employerID) {
+        console.error("Employer ID is undefined.");
+        return;
+    }
+
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
     const yyyy = today.getFullYear();
     const formattedDate = `${dd}/${mm}/${yyyy}`;
-    let newApplication= { jobId:jobId,userId:userId,date:formattedDate };
-    console.log(newApplication);
+
+    const newApplication = {
+        jobId: jobId,
+        userId: userId,  // שימוש ב-ID של המשתמש המחובר
+        employerID: employerID,  // הוספת ID של המעסיק לבקשה
+        date: formattedDate
+    };
+
+    console.log("Prepared application data:", newApplication); // בקרת אש: מידע הבקשה
+
+    db.collection("applications").add(newApplication)
+        .then(() => {
+            console.log("Application submitted:", newApplication);
+            alert("Your application has been submitted.");
+            markJobAsApplied(jobId); // הוספת סימון שהגשת בקשה
+        })
+        .catch((error) => {
+            console.error("Error submitting application:", error);
+            alert("There was an error submitting your application. Please try again.");
+        });
 }
-function shareLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, showError);
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-}
+
 
 function showPosition(position) {
     selectedLocation.latitude = position.coords.latitude;
@@ -418,6 +492,18 @@ function updateSliderLabel(currentZoom) {
         }
     }
 }
+
+function markJobAsApplied(jobId) {
+    const listItem = document.getElementById(jobId);
+    if (listItem) {
+        listItem.classList.add("applied");
+        const appliedText = document.createElement("span");
+        appliedText.classList.add("badge", "bg-success", "ms-2");
+        appliedText.innerText = "Applied";
+        listItem.appendChild(appliedText);
+    }
+}
+
 
 function showError(error) {
     switch(error.code) {

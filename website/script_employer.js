@@ -38,6 +38,7 @@ firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         employerID = user.uid;
         loadJobs(); // קריאת המשרות מה-Firebase כאשר המעסיק מחובר
+        loadApplications(); // קריאת הבקשות בעת התחברות המעסיק
     } else {
         console.log("No user is signed in.");
     }
@@ -272,7 +273,59 @@ function deleteJob(jobId) {
     });
 }
 
+function loadApplications() {
+    db.collection("applications")
+        .where("employerID", "==", employerID)
+        .get()
+        .then((querySnapshot) => {
+            const applicationsData = [];
+            querySnapshot.forEach(async (doc) => {
+                const application = doc.data();
+                const userId = application.userId;
+                try {
+                    const userDoc = await db.collection("users").doc(userId).get();
+                    const userData = userDoc.data();
+                    applicationsData.push({ application, userData });
+                    displayApplications(applicationsData);
+                } catch (error) {
+                    console.error("Error fetching user data: ", error);
+                }
+            });
+        })
+        .catch((error) => {
+            console.error("Error loading applications: ", error);
+        });
+}
+
+function displayApplications(applicationsData) {
+    const applicationsList = document.getElementById("applicationsList");
+    removeAllChildNodes(applicationsList);
+
+    applicationsData.forEach(({ application, userData }) => {
+        const listItem = document.createElement("li");
+        listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-start", "flex-column");
         
+        const jobDescription = document.createElement("h6");
+        jobDescription.textContent = `Applied by: ${userData.name}`;
+        listItem.appendChild(jobDescription);
+        
+        const userEmail = document.createElement("h6");
+        userEmail.textContent = `Email: ${userData.email}`;
+        listItem.appendChild(userEmail);
+
+        const userPhone = document.createElement("h6");
+        userPhone.textContent = `Phone: ${userData.phone}`; // הוספת מספר הטלפון
+        listItem.appendChild(userPhone);
+
+        const appDate = document.createElement("h6");
+        appDate.textContent = `On: ${application.date}`;
+        listItem.appendChild(appDate);
+
+        applicationsList.appendChild(listItem);
+    });
+}
+
+    
     function jobToEdit(id) {
         let job = jobsData.find(job => job.id === id);
         if (!job) {
