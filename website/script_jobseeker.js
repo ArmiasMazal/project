@@ -1,12 +1,9 @@
 let mapRef = null;
+let firstLocation= false;
+let jobsData=[];
 let selectedLocation = { latitude: 32.0153, longitude: 34.7874 }; // HIT Holon
 let markers = [];
-let jobsData = [
-    { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025",emplpoyerID:"1" },
-    { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025",emplpoyerID:"1" },
-    { id:"2",location: "32.31353217383461, 34.84667905081852", description: "מחפשים קונדיטור/ית לצוות, למשרה מלאה בואו להצטרף לצוות המלון !!",type:"full time", wage:"50", publicationDate:"01/01/2025",emplpoyerID:"2" },
-    { id:"1",location: "31.662033197806444, 34.55998114149099", description: "מחפשים אח/ות למחלקת יולדות, למשרה מלאה.דרוש/ה אח/ות עם ניסיון והמלצות!!",type:"full time", wage:"40", publicationDate:"01/11/2024",emplpoyerID:"3" }
-];
+
 let jobsAfterFilter=[];
 const zoomLevels = [
     { zoomLevel: 7, distanceKm: 512 },
@@ -19,7 +16,20 @@ const zoomLevels = [
     { zoomLevel: 14, distanceKm: 2 },
     { zoomLevel: 15, distanceKm: 1 }
 ];
+async function fetchUserFromFirebase(userId) {
+    try {
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (userDoc.exists) {
+            let chosenUser = { id: userId, ...userDoc.data() };
+            document.getElementById("welcome").innerHTML="Welcome "+chosenUser.name+", "+document.getElementById("welcome").innerHTML;
 
+        } else {
+            console.error("No such user!");
+        }
+    } catch (error) {
+        console.error("Error fetching user from Firebase:", error);
+    }
+}
 
 function filterJobs() {
     jobsAfterFilter = [];
@@ -35,9 +45,6 @@ function filterJobs() {
         if (canEnter) jobsAfterFilter.push(job);
     });
 
-    if (jobsAfterFilter.length === 0) {
-        alert("We couldn't find jobs that match these filters");
-    }
     removeAllChildNodes(document.getElementById("jobsList"));
     jobsAfterFilter.forEach(job => {
         const [latitude, longitude] = job.location.split(", ").map(Number);
@@ -45,7 +52,17 @@ function filterJobs() {
             jobsList(job, latitude, longitude);
         }
     });
+    loadUserApplications();
 
+}
+
+function shareLocation() {
+    firstLocation=true;
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
 }
 
 function loadUserApplications() {
@@ -73,7 +90,8 @@ function loadUserApplications() {
 
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-        loadUserApplications(); // קריאת הבקשות של המשתמש
+        fetchUserFromFirebase(user.uid);
+       // loadUserApplications(); // קריאת הבקשות של המשתמש
     }
 });
 
@@ -135,6 +153,11 @@ function jobsList(job,lat,long){
     listItem.id = job.id;
     listItem.innerHTML = job.description + " (" + locationsDistance(lat, long).toFixed(2) + " KM)";
     list.append(listItem);
+    let applyArea = document.createElement("div");
+    applyArea.id="apply"+job.id;
+    list.append(applyArea);
+
+    loadUserApplications();
 
 }
 function removeAllChildNodes(parent) {
@@ -215,7 +238,10 @@ function initializeMap(zoom = 10) {
         });
     }
     filterJobs();
+    
     groupAndAddMarkers();
+    
+    
 }
 
 function groupAndAddMarkers() {
@@ -232,13 +258,13 @@ function groupAndAddMarkers() {
         }
         groupedLocations[key].items.push(item);
     });
-
-    const selectedKey = `${selectedLocation.latitude},${selectedLocation.longitude}`;
-    if (!groupedLocations[selectedKey]) {
-        groupedLocations[selectedKey] = { items: [], icon: selectedLocationIcon };
+    if (firstLocation){
+        const selectedKey = `${selectedLocation.latitude},${selectedLocation.longitude}`;
+        if (!groupedLocations[selectedKey]) {
+            groupedLocations[selectedKey] = { items: [], icon: selectedLocationIcon };
+        }
+        groupedLocations[selectedKey].items.push({ description: "chosen location", id: "" });
     }
-    groupedLocations[selectedKey].items.push({ description: "chosen location", id: "" });
-
     addMarkersToMap(groupedLocations);
 }
 
@@ -279,6 +305,7 @@ function generatePopupContent(items) {
 
 
 function submitLocation() {
+    firstLocation=true;
     const address = document.getElementById("address").value;
     forwardGeocode(address).then(coordinates => {
         //console.log(`The coordinates for the address are: ${JSON.stringify(coordinates)}`);
@@ -348,7 +375,7 @@ async function fetchJobsFromFirebase() {
         });
 
         console.log("Jobs data after fetching from Firebase:", jobsData); // בקרת אש: מידע המשרות לאחר השליפה
-
+        initializeMap();
         filterJobs();
     } catch (error) {
         console.error("Error fetching jobs from Firebase:", error);
@@ -371,10 +398,15 @@ function showJob(id){
     }
     jobsAfterFilter.forEach(job => {
         if(job.id==id){
-            document.getElementById(job.id).classList.add("active");
+            if(document.getElementById(job.id)){
+                document.getElementById(job.id).classList.add("active");
+            }
         }
         else{
-            document.getElementById(job.id).classList.remove("active");        }
+            if(document.getElementById(job.id)){
+                document.getElementById(job.id).classList.remove("active");       
+             }
+        }
     });
     removeAllChildNodes(details);
     let jobDescription = document.createElement("h5");
@@ -494,12 +526,14 @@ function updateSliderLabel(currentZoom) {
 }
 
 function markJobAsApplied(jobId) {
-    const listItem = document.getElementById(jobId);
+    const listItem = document.getElementById("apply"+jobId); 
     if (listItem) {
+        removeAllChildNodes(listItem); 
         listItem.classList.add("applied");
         const appliedText = document.createElement("span");
         appliedText.classList.add("badge", "bg-success", "ms-2");
         appliedText.innerText = "Applied";
+        appliedText.id="applied";
         listItem.appendChild(appliedText);
     }
 }

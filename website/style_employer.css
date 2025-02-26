@@ -38,7 +38,7 @@ button:hover {
 }
 
 .scrollable-list {
-  max-height: 260px; 
+  max-height: 200px; 
   overflow-y: auto;
 }
 

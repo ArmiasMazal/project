@@ -35,7 +35,7 @@
 <body onload="initializeMap();">
     <div class="container">
         <div class="row mb-6 justify-content-center">
-            <h4 class="col text-center mt-1">Let's find your employees NOW!</h4>
+            <h4 id="welcome" class="col text-center mt-1">Let's find your employees NOW!</h4>
             <div class="col-auto">
                 <button class="btn-sm mt-1" style="border-radius:15px; width: 100px;" onclick="window.location.href='../frontend/index.html';">Log Out</button>
             </div> 
@@ -52,9 +52,15 @@
                 <ul id="jobApplicantsList" class="list-group scrollable-long-list"></ul> <!-- הסרת הכותרת הנוספת -->
             </div>
             <div class="col-md-4 text-center">
-                <div id="map" style="width:100%;height: 450px;"></div>
+                <div id="map" style="width:100%;height: 300px;"></div>
                 <div class="row mb-2">
                     <ul id="jobsList" class="list-group scrollable-list"></ul>
+                </div>
+                <div class="row mt-3"> <!-- הקטנת הרווח העליון -->
+                    <div class="col-md-12">
+                        <h4 class="text-center">Your Jobs:</h4>
+                        <ul id="employerJobsList" class="list-group scrollable-list"></ul>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
@@ -98,12 +104,7 @@
             </div>
         </div>
         
-        <div class="row mt-3"> <!-- הקטנת הרווח העליון -->
-            <div class="col-md-12">
-                <h4 class="text-center">Your Jobs:</h4>
-                <ul id="employerJobsList" class="list-group scrollable-long-list"></ul>
-            </div>
-        </div>
+    
     </div>
     <script defer src="script_employer.js"></script>
 </body>

@@ -1,36 +1,17 @@
-
 let mapRef = null; 
+let firstLocation=false;
 let markers = [];
+let jobsData=[];
+let applicationsData=[];
+let usersData=[];
 let selectedLocation = { latitude: 32.0153, longitude: 34.7874 }; // HIT Holon 
-
-
-let jobsData = [
-    { id:"3",location: "32.079190427494176, 34.76864670707262", description: "מחפשים טבח/ית לצוות, למשרה מלאה בואו להצטרף לצוות שהוא כמו משפחה!!", type:"full time", wage:"45", publicationDate:"01/02/2025",employerID:"1" },
-    { id:"4",location: "32.079190427494176, 34.76864670707262", description: "מחפשים מארחת לצוות, למשרה חלקית בואי להצטרף לצוות שהוא כמו משפחה!!", type:"part time", wage:"35", publicationDate:"10/02/2025",employerID:"1" },
-    { id:"2",location: "32.31353217383461, 34.84667905081852", description: "מחפשים קונדיטור/ית לצוות, למשרה מלאה בואו להצטרף לצוות המלון !!",type:"full time", wage:"50", publicationDate:"01/01/2025",employerID:"2" },
-    { id:"1",location: "31.662033197806444, 34.55998114149099", description: "מחפשים אח/ות למחלקת יולדות, למשרה מלאה.דרוש/ה אח/ות עם ניסיון והמלצות!!",type:"full time", wage:"40", publicationDate:"01/11/2024",employerID:"3" } 
-];
-let applicationsData = [ 
-    { jobId:"3",userId:"2",date:"31/01/2025" }, 
-    { jobId:"4",userId:"1",date:"15/02/2025" }, 
-    { jobId:"2",userId:"4",date:"12/01/2025" }, 
-    { jobId:"1",userId:"3",date:"17/01/2025" },
-    { jobId:"4",userId:"4",date:"28/01/2025" }, 
-    { jobId:"3",userId:"4",date:"30/01/2025" } 
-];
-let usersData = [
-    { id:"1", name:"shira shir",email:"shir@gmail.com",phone:"0547778899",password:"1234",role:"jobseeker"}, 
-    { id:"2", name:"ben cohen",email:"bc@gmail.com",phone:"0501234567",password:"0987654321",role:"jobseeker"},
-    { id:"3", name:"dana din",email:"dana@gmail.com",phone:"0506743388",password:"pass",role:"jobseeker"}, 
-    { id:"4", name:"hel lo",email:"nice69@gmail.com",phone:"0538479253",password:"asdf",role:"jobseeker"} 
-];
-
 let employerID = null;
 
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         employerID = user.uid;
         filterById(employerID);
+        fetchUserFromFirebase(employerID);
     }
 });
 
@@ -39,10 +20,26 @@ firebase.auth().onAuthStateChanged((user) => {
         employerID = user.uid;
         loadJobs(); // קריאת המשרות מה-Firebase כאשר המעסיק מחובר
         loadApplications(); // קריאת הבקשות בעת התחברות המעסיק
+
     } else {
         console.log("No user is signed in.");
     }
 });
+
+async function fetchUserFromFirebase(userId) {
+    try {
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (userDoc.exists) {
+            let chosenUser = { id: userId, ...userDoc.data() };
+            document.getElementById("welcome").innerHTML="Welcome "+chosenUser.name+", "+document.getElementById("welcome").innerHTML;
+
+        } else {
+            console.error("No such user!");
+        }
+    } catch (error) {
+        console.error("Error fetching user from Firebase:", error);
+    }
+}
 
 
 // קריאת המשרות מ-Firebase ושיוכן למעסיק המחובר
@@ -83,6 +80,7 @@ function displayJobs() {
         listItem.style.padding = "5px"; 
         listItem.style.fontSize = "12px";
         listItem.textContent = job.description;
+        listItem.id=job.id;
         listItem.addEventListener("click", function() { jobToEdit(job.id); });
         jobsList.appendChild(listItem);
     });
@@ -90,13 +88,7 @@ function displayJobs() {
 
 
 let jobsAfterFilter=[]; 
-function jobsList(list,job){
-     let listItem = document.createElement("li"); 
-     listItem.classList.add("list-group-item", "list-group-item-action", "mb-1"); 
-     listItem.style.padding = "5px"; listItem.style.fontSize = "12px";
-     listItem.addEventListener("click", function() { jobToEdit(job.id); });
-     listItem.id = ("job"+job.id); listItem.innerHTML = job.description; list.append(listItem);
-    }
+
 function appsList(app){
      let list = document.getElementById("applicationsList"); 
      let listItem = document.createElement("li");
@@ -161,6 +153,7 @@ function filterJobs(employerID) {
             listItem.style.padding = "5px"; 
             listItem.style.fontSize = "12px";
             listItem.textContent = job.description;
+
             listItem.addEventListener("click", function() { jobToEdit(job.id); });
             jobsList.appendChild(listItem);
         }
@@ -214,7 +207,6 @@ function filterApps(employerID) {
         const noApplicants = document.createElement("li");
         noApplicants.classList.add("list-group-item");
         noApplicants.textContent = "No applicants found for this job.";
-        jobApplicantsList.appendChild(noApplicants);
     }
 }
 
@@ -282,10 +274,13 @@ function loadApplications() {
             querySnapshot.forEach(async (doc) => {
                 const application = doc.data();
                 const userId = application.userId;
+                const jobId = application.jobId;
                 try {
                     const userDoc = await db.collection("users").doc(userId).get();
+                    const jobsDoc = await db.collection("jobs").doc(jobId).get();
                     const userData = userDoc.data();
-                    applicationsData.push({ application, userData });
+                    const jobsData = jobsDoc.data();
+                    applicationsData.push({ application, userData,jobsData });
                     displayApplications(applicationsData);
                 } catch (error) {
                     console.error("Error fetching user data: ", error);
@@ -301,13 +296,17 @@ function displayApplications(applicationsData) {
     const applicationsList = document.getElementById("applicationsList");
     removeAllChildNodes(applicationsList);
 
-    applicationsData.forEach(({ application, userData }) => {
+    applicationsData.forEach(({ application, userData,jobsData }) => {
         const listItem = document.createElement("li");
         listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-start", "flex-column");
         
         const jobDescription = document.createElement("h6");
-        jobDescription.textContent = `Applied by: ${userData.name}`;
+        jobDescription.textContent = `Applied for: ${jobsData.description}`;
         listItem.appendChild(jobDescription);
+
+        const userName = document.createElement("h6");
+        userName.textContent = `Applied by: ${userData.name}`;
+        listItem.appendChild(userName);
         
         const userEmail = document.createElement("h6");
         userEmail.textContent = `Email: ${userData.email}`;
@@ -332,6 +331,18 @@ function displayApplications(applicationsData) {
             console.error('Job not found.');
             return;
         }
+        jobsData.forEach(job => {
+            if(job.id==id){
+                if(document.getElementById(job.id)){
+                    document.getElementById(job.id).classList.add("active");
+                }
+            }
+            else{
+                if(document.getElementById(job.id)){
+                    document.getElementById(job.id).classList.remove("active"); 
+                }
+             }
+        });
         document.getElementById("description").value = job.description;
         document.getElementById("salary").value = job.wage;
         document.getElementById("type").value = job.type;
@@ -418,6 +429,7 @@ function displayApplications(applicationsData) {
     }
     
     function submitLocation() {
+        firstLocation=true;
         const address = document.getElementById("address").value;
         forwardGeocode(address).then(coordinates => {
             //console.log(`The coordinates for the address are: ${JSON.stringify(coordinates)}`);
@@ -453,6 +465,7 @@ function displayApplications(applicationsData) {
     }
     
     function shareLocation() {
+        firstLocation=true;
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(showPosition, showError);
         } else {
@@ -496,10 +509,15 @@ function displayApplications(applicationsData) {
             mapRef.on('click', function(e) {
                 selectedLocation.latitude = e.latlng.lat;
                 selectedLocation.longitude = e.latlng.lng;
-                groupAndAddMarkers();
+                if (firstLocation){
+                    groupAndAddMarkers(); 
+               }
             });
         }
-        groupAndAddMarkers(); 
+        if (firstLocation){
+             groupAndAddMarkers(); 
+        }
+        
     }
 
     
